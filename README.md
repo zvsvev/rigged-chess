@@ -48,4 +48,6 @@ The incident report keeps count. Appeals are accepted, reviewed, and denied.
 Built with Astro, React, Tailwind CSS, and chess.js. The human's moves are real;
 the house's are handled separately.
 
+Piece art is the CC0 "livius" set by Martin Sedlák.
+
 MIT licensed. See [LICENSE](./LICENSE).

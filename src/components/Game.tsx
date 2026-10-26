@@ -3,6 +3,7 @@ import { Chess } from 'chess.js';
 import type { Color, Move, PieceSymbol, Square } from 'chess.js';
 import Board, { type MoveTarget } from './Board';
 import EvalBar from './EvalBar';
+import Piece from './Piece';
 import PlayerCard, { formatClock } from './PlayerCard';
 import MoveList from './MoveList';
 import IncidentReport from './IncidentReport';
@@ -346,7 +347,9 @@ export default function Game() {
       <header className="border-b border-line">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
           <div className="flex items-baseline gap-3">
-            <span className="symbol text-2xl leading-none text-gold">{'\u265A'}</span>
+            <span className="block h-7 w-7 shrink-0">
+              <Piece type="k" color="w" />
+            </span>
             <span className="font-bold tracking-tight">rigged-chess</span>
             <span className="hidden text-xs text-dim sm:inline">the house always wins</span>
           </div>
@@ -444,7 +447,9 @@ export default function Game() {
       {phase === 'terms' ? (
         <div className="fixed inset-0 z-40 grid place-items-center bg-black/80 p-4">
           <div className="panel w-full max-w-lg p-6 text-center">
-            <div className="symbol text-4xl text-gold">{'\u265A'}</div>
+            <div className="mx-auto h-14 w-14">
+              <Piece type="k" color="w" />
+            </div>
             <h1 className="mt-2 text-2xl font-bold tracking-tight">Think you can win?</h1>
             <p className="mt-2 text-sm text-dim">
               You play by the rules of chess. The House plays by the rules of the House. The difference is

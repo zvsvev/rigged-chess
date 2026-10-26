@@ -1,3 +1,5 @@
+import Piece from './Piece';
+
 interface Props {
   name: string;
   rating: string;
@@ -20,11 +22,11 @@ export default function PlayerCard({ name, rating, blurb, active, thoughts, cloc
   return (
     <div className="flex items-center gap-3 py-2">
       <div
-        className={`grid h-10 w-10 place-items-center rounded border text-xl leading-none ${
-          house ? 'border-gold/40 bg-panel2 text-gold' : 'border-line bg-panel2 text-ink'
+        className={`grid h-10 w-10 place-items-center rounded border bg-panel2 ${
+          house ? 'border-gold/40' : 'border-line'
         }`}
       >
-        <span className="symbol">{house ? '\u265A' : '\u265F'}</span>
+        <Piece type={house ? 'k' : 'p'} color="w" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

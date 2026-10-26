@@ -2,15 +2,6 @@ import type { PieceSymbol } from 'chess.js';
 
 export const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const;
 
-export const GLYPH: Record<PieceSymbol, string> = {
-  k: '\u265A',
-  q: '\u265B',
-  r: '\u265C',
-  b: '\u265D',
-  n: '\u265E',
-  p: '\u265F',
-};
-
 export const VALUE: Record<PieceSymbol, number> = {
   p: 1,
   n: 3,

@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react';
 import { Chess } from 'chess.js';
 import type { Square } from 'chess.js';
-import { FILES, GLYPH } from '../lib/pieces';
+import { FILES } from '../lib/pieces';
+import Piece from './Piece';
 
 export interface MoveTarget {
   to: Square;
@@ -45,7 +46,7 @@ export default function Board({ fen, selected, targets, lastMove, checkSquare, i
 
       squares.push(
         <div key={square} className={classes.join(' ')} onClick={() => interactive && onSquare(square)}>
-          {cell ? <span className={`piece ${cell.color}`}>{GLYPH[cell.type]}</span> : null}
+          {cell ? <Piece type={cell.type} color={cell.color} /> : null}
           {target && !target.capture && !cell ? <span className="dot" /> : null}
           {target && target.capture ? <span className="dot capture" /> : null}
           {r === 7 ? (
