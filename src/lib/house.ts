@@ -34,6 +34,12 @@ export interface HouseResult {
 /** After this many half-moves the house stops pretending and ends it by decree. */
 export const DECREE_PLY = 30;
 
+/** The House plays by the rules for this many of its own moves before it starts cheating. */
+export const CLEAN_MOVES = 3;
+
+/** Clock stealing stays locked for this many seconds from the start of the game. */
+export const TIME_CHEAT_AFTER_SECONDS = 10;
+
 interface Placed {
   square: Square;
   type: PieceSymbol;
@@ -210,16 +216,17 @@ export function houseTurn(fen: string, ctx: HouseContext): HouseResult {
   const g = new Chess(fen);
   g.load(withTurn(g.fen(), 'b'));
   const actions: HouseAction[] = [];
-  const level = Math.min(4, 1 + Math.floor(ctx.moveNo / 5));
+  const clean = ctx.moveNo <= CLEAN_MOVES;
+  const level = clean ? 0 : Math.min(4, 1 + Math.floor(ctx.moveNo / 5));
   let fallback: string | null = null;
 
-  if (g.isCheckmate()) {
+  if (!clean && g.isCheckmate()) {
     actions.push({
       kind: 'immunity',
       text: 'Checkmate registered. The House king has declined it under Rule 0.4(b). Play continues.',
     });
     kingEscape(g, actions);
-  } else if (g.isCheck() && chance(0.7)) {
+  } else if (!clean && g.isCheck() && chance(0.7)) {
     actions.push({
       kind: 'ignore-check',
       text: 'Your check has been received and logged as a clerical error. The House is not in check.',
@@ -243,25 +250,27 @@ export function houseTurn(fen: string, ctx: HouseContext): HouseResult {
     }
   }
 
-  if (chance(level >= 2 ? 0.55 : 0.15)) {
-    const second = pickMove(g, whiteKing(g));
-    if (second) {
-      g.move(second);
-      g.load(withTurn(g.fen(), 'b'));
-      actions.push({
-        kind: 'double',
-        san: second.san,
-        from: second.from,
-        to: second.to,
-        piece: second.piece,
-        text: `The House also played ${second.san}. Two moves this turn, as is its right.`,
-      });
+  if (!clean) {
+    if (chance(level >= 2 ? 0.55 : 0.15)) {
+      const second = pickMove(g, whiteKing(g));
+      if (second) {
+        g.move(second);
+        g.load(withTurn(g.fen(), 'b'));
+        actions.push({
+          kind: 'double',
+          san: second.san,
+          from: second.from,
+          to: second.to,
+          piece: second.piece,
+          text: `The House also played ${second.san}. Two moves this turn, as is its right.`,
+        });
+      }
     }
-  }
 
-  if (chance(level >= 2 ? 0.5 : 0.12)) freePromotion(g, actions);
-  if (chance(level >= 2 ? 0.55 : 0.12)) teleport(g, actions);
-  if (ctx.graveyard.length && chance(level >= 2 ? 0.45 : 0.12)) respawn(g, ctx.graveyard, actions);
+    if (chance(level >= 2 ? 0.5 : 0.12)) freePromotion(g, actions);
+    if (chance(level >= 2 ? 0.55 : 0.12)) teleport(g, actions);
+    if (ctx.graveyard.length && chance(level >= 2 ? 0.45 : 0.12)) respawn(g, ctx.graveyard, actions);
+  }
 
   const king = blackKing(g);
   if (king && g.isAttacked(king, 'w')) kingEscape(g, actions);

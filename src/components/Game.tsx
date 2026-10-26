@@ -9,7 +9,14 @@ import MoveList from './MoveList';
 import IncidentReport from './IncidentReport';
 import AppealModal from './AppealModal';
 import HouseRules from './HouseRules';
-import { DECREE_PLY, houseTurn, rewritePlayerMove, type HouseAction } from '../lib/house';
+import {
+  CLEAN_MOVES,
+  DECREE_PLY,
+  TIME_CHEAT_AFTER_SECONDS,
+  houseTurn,
+  rewritePlayerMove,
+  type HouseAction,
+} from '../lib/house';
 import { APPEAL_VERDICTS, FAIR_PLAY_LINES, pick } from '../lib/incidents';
 import type { Incident, MoveRec, Severity } from '../lib/types';
 
@@ -53,6 +60,7 @@ export default function Game() {
   const [status, setStatus] = useState('');
   const [thinking, setThinking] = useState(false);
   const [playerTime, setPlayerTime] = useState(CLOCK_START);
+  const [houseTime, setHouseTime] = useState(CLOCK_START);
   const [appealOpen, setAppealOpen] = useState(false);
   const [verdict, setVerdict] = useState('');
   const [streak, setStreak] = useState(() => {
@@ -66,6 +74,8 @@ export default function Game() {
 
   const timer = useRef<number | undefined>(undefined);
   const incidentId = useRef(0);
+  const startedAt = useRef(0);
+  const turnRef = useRef<'w' | 'b'>('w');
 
   const game = useMemo(() => {
     try {
@@ -184,19 +194,35 @@ export default function Game() {
 
       if (fresh.length) setIncidents((prev) => [...fresh, ...prev]);
 
-      if (fresh.length && Math.random() < 0.25) {
-        const fee = 5 + Math.floor(Math.random() * 9);
-        setPlayerTime((value) => Math.max(0, value - fee));
-        setIncidents((prev) => [
-          {
-            id: (incidentId.current += 1),
-            moveNo,
-            label: 'Clock adjustment fee',
-            detail: `The House deducted ${fee} seconds from your clock for administrative reasons.`,
-            severity: 'minor',
-          },
-          ...prev,
-        ]);
+      const elapsed = startedAt.current ? (Date.now() - startedAt.current) / 1000 : 0;
+      if (elapsed >= TIME_CHEAT_AFTER_SECONDS && Math.random() < 0.3) {
+        if (Math.random() < 0.5) {
+          const fee = 5 + Math.floor(Math.random() * 9);
+          setPlayerTime((value) => Math.max(0, value - fee));
+          setIncidents((prev) => [
+            {
+              id: (incidentId.current += 1),
+              moveNo,
+              label: 'Clock adjustment fee',
+              detail: `The House deducted ${fee} seconds from your clock for administrative reasons.`,
+              severity: 'minor',
+            },
+            ...prev,
+          ]);
+        } else {
+          const bonus = 15 + Math.floor(Math.random() * 31);
+          setHouseTime((value) => value + bonus);
+          setIncidents((prev) => [
+            {
+              id: (incidentId.current += 1),
+              moveNo,
+              label: 'Clock credited',
+              detail: `The House added ${bonus} seconds to its own clock for good behaviour.`,
+              severity: 'moderate',
+            },
+            ...prev,
+          ]);
+        }
       }
 
       let after: Chess;
@@ -256,7 +282,8 @@ export default function Game() {
         },
       ]);
 
-      if (ply >= 4 && Math.random() < 0.16) {
+      const nextHouseMove = Math.floor(ply / 2) + 1;
+      if (nextHouseMove > CLEAN_MOVES && Math.random() < 0.16) {
         const edited = rewritePlayerMove(nextFen, { to: move.to, piece: move.piece });
         if (edited) {
           nextFen = edited.fen;
@@ -265,7 +292,7 @@ export default function Game() {
             setIncidents((prev) => [
               {
                 id: (incidentId.current += 1),
-                moveNo: Math.floor(ply / 2) + 1,
+                moveNo: nextHouseMove,
                 label: meta.label,
                 detail: edited.action.text,
                 severity: meta.severity,
@@ -290,6 +317,7 @@ export default function Game() {
 
   const startGame = useCallback(() => {
     window.clearTimeout(timer.current);
+    startedAt.current = Date.now();
     setFen(new Chess().fen());
     setSelected(null);
     setLastMove(null);
@@ -300,6 +328,7 @@ export default function Game() {
     setOutcome('');
     setThinking(false);
     setPlayerTime(CLOCK_START);
+    setHouseTime(CLOCK_START);
     setVerdict('');
     setAppealOpen(false);
     setStatus('');
@@ -309,16 +338,24 @@ export default function Game() {
   useEffect(() => {
     if (phase !== 'playing' || winner) return undefined;
     const id = window.setInterval(() => {
-      setPlayerTime((value) => {
-        if (value <= 1) {
-          endHouse('Your flag fell. The House wins on time, as anticipated.');
-          return 0;
-        }
-        return value - 1;
-      });
+      if (turnRef.current === 'w') {
+        setPlayerTime((value) => {
+          if (value <= 1) {
+            endHouse('Your flag fell. The House wins on time, as anticipated.');
+            return 0;
+          }
+          return value - 1;
+        });
+      } else {
+        setHouseTime((value) => Math.max(1, value - 1));
+      }
     }, 1000);
     return () => window.clearInterval(id);
   }, [phase, winner, endHouse]);
+
+  useEffect(() => {
+    turnRef.current = turn;
+  }, [turn]);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -374,7 +411,7 @@ export default function Game() {
               blurb="undefeated since 1987"
               active={phase === 'playing' && turn === 'b'}
               thoughts={houseThoughts}
-              clock={'\u221E'}
+              clock={formatClock(houseTime)}
             />
 
             <div className="flex items-stretch gap-3">
