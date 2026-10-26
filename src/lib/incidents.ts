@@ -13,10 +13,8 @@ export const APPEAL_VERDICTS = [
 
 export const FAIR_PLAY_LINES = [
   'Certified fair by the House Fairness Commission.',
-  'Zero unfairness detected. Source: us.',
   'Every move reviewed. Ours are the reviewed ones.',
   'Integrity guaranteed or your rating back.',
-  'Approved by the House Committee on Playing Normally.',
 ];
 
 export function pick<T>(items: T[]): T {

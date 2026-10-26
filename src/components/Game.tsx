@@ -22,7 +22,6 @@ type Phase = 'terms' | 'playing' | 'over';
 const ABBR: Record<PieceSymbol, string> = { k: 'K', q: 'Q', r: 'R', b: 'B', n: 'N', p: '' };
 
 const ACTION_META: Partial<Record<HouseAction['kind'], { label: string; severity: Severity }>> = {
-  double: { label: 'Two moves in one turn', severity: 'moderate' },
   promotion: { label: 'Unauthorized promotion', severity: 'moderate' },
   teleport: { label: 'Piece relocated mid-game', severity: 'severe' },
   respawn: { label: 'Captured piece returned', severity: 'severe' },
@@ -50,7 +49,7 @@ export default function Game() {
   const [graveyard, setGraveyard] = useState<PieceSymbol[]>([]);
   const [winner, setWinner] = useState<'house' | null>(null);
   const [outcome, setOutcome] = useState('');
-  const [status, setStatus] = useState('Your move.');
+  const [status, setStatus] = useState('');
   const [thinking, setThinking] = useState(false);
   const [playerTime, setPlayerTime] = useState(CLOCK_START);
   const [appealOpen, setAppealOpen] = useState(false);
@@ -217,7 +216,7 @@ export default function Game() {
         endHouse('The House has invoked Rule 7.2 and awarded itself the game.');
       } else {
         setThinking(false);
-        setStatus('Your move.');
+        setStatus('');
       }
     },
     [endHouse],
@@ -302,7 +301,7 @@ export default function Game() {
     setPlayerTime(CLOCK_START);
     setVerdict('');
     setAppealOpen(false);
-    setStatus('Your move.');
+    setStatus('');
     setPhase('playing');
   }, []);
 
@@ -368,11 +367,11 @@ export default function Game() {
             <PlayerCard
               house
               name="THE HOUSE"
-              rating="\u221E"
+              rating={'\u221E'}
               blurb="undefeated since 1987"
               active={phase === 'playing' && turn === 'b'}
               thoughts={houseThoughts}
-              clock="\u221E"
+              clock={'\u221E'}
             />
 
             <div className="flex items-stretch gap-3">
@@ -400,9 +399,6 @@ export default function Game() {
             />
 
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <button className="btn" onClick={startGame}>
-                {phase === 'over' ? 'Start another rigged game' : 'Restart'}
-              </button>
               <button
                 className="btn"
                 onClick={() => endHouse('You resigned. The House accepts, graciously and immediately.')}
@@ -434,7 +430,15 @@ export default function Game() {
       </main>
 
       <footer className="border-t border-line px-4 py-4 text-center text-xs text-dim">
-        chess.ulinnuha.id · Certified fair by the House Fairness Commission · Source available under the MIT license
+        built by{' '}
+        <a
+          href="https://ulinnuha.id"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-ink underline-offset-2 hover:underline"
+        >
+          ulinnuha.eth
+        </a>
       </footer>
 
       {phase === 'terms' ? (
