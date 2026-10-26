@@ -350,7 +350,7 @@ export default function Game() {
             <span className="block h-7 w-7 shrink-0">
               <Piece type="k" color="w" />
             </span>
-            <span className="font-bold tracking-tight">rigged-chess</span>
+            <span className="font-bold tracking-tight">chess.ulinnuha.id</span>
             <span className="hidden text-xs text-dim sm:inline">the house always wins</span>
           </div>
           <div className="flex items-center gap-2">
